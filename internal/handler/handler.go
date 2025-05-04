@@ -51,7 +51,7 @@ func (handler *Handler) Handle(stop <-chan bool) error {
 		default:
 			fmt.Println("Getting last update")
 		}
-		updates, err := handler.sendHandleRequest(*lastId)
+		updates, err := handler.getUpdates(*lastId)
 		if err != nil {
 			return err
 		}
@@ -62,10 +62,11 @@ func (handler *Handler) Handle(stop <-chan bool) error {
 	}
 }
 
-func (handler *Handler) sendHandleRequest(id int) (*UpdatesInfo, error) {
+func (handler *Handler) getUpdates(id int) (*UpdatesInfo, error) {
+	const op = "getUpdates"
 	resp, err := u.GetRequest(
 		*handler.token,
-		"getUpdates",
+		op,
 		map[string]string{"offset": strconv.Itoa(id), "timeout": "20"})
 	if err != nil {
 		return nil, err
@@ -95,6 +96,7 @@ func (handler *Handler) handleUpdates(updates *UpdatesInfo, lastId *int) error {
 }
 
 func (handler *Handler) loadLastId() (int, error) {
+	const op = "loadLastId"
 	resp, err := u.GetRequest(
 		*handler.token,
 		"getUpdates",

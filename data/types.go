@@ -17,7 +17,7 @@ type Message struct {
 	Animation interface{} `json:"animation,omitempty"`
 	Audio     interface{} `json:"audio,omitempty"`
 	Document  interface{} `json:"document,omitempty"`
-	Photo     interface{} `json:"photo,omitempty"`
+	Photo     []Photo     `json:"photo,omitempty"`
 	Sticker   interface{} `json:"sticker,omitempty"`
 	Video     interface{} `json:"video,omitempty"`
 	Story     interface{} `json:"story,omitempty"`
@@ -43,4 +43,9 @@ type Chat struct {
 	FirstName string `json:"first_name,omitempty"`
 	LastName  string `json:"last_name,omitempty"`
 	Username  string `json:"username,omitempty"`
+}
+
+type Photo struct {
+	FilePath string `json:"-"`
+	FileId   string `json:"file_id"`
 }

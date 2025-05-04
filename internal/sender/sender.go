@@ -1,12 +1,15 @@
 package sender
 
 import (
+	"bytes"
 	"encoding/json"
 	"gotel_alpha/data"
 	"gotel_alpha/internal/handler"
 	"gotel_alpha/util"
 	"io"
+	"mime/multipart"
 	"net/http"
+	"os"
 	"strconv"
 )
 
@@ -24,15 +27,56 @@ func NewSender(token *string) *Sender {
 }
 
 func (sender *Sender) SendMessage(sendingMessage *SendingEntity) (*data.Message, error) {
+	const op = "sendMessage"
 	params := make(map[string]string)
 	params["chat_id"] = sendingMessage.ChatId
 	params["text"] = sendingMessage.Value.(string)
-	resp, err := util.GetRequest(*sender.token, "sendMessage", params)
+	resp, err := util.GetRequest(*sender.token, op, params)
 	if err != nil {
 		return nil, err
 	}
 	respMessage, err := getMessage(resp)
 	return respMessage, err
+}
+
+func (sender *Sender) SendPhoto(sendingPhoto *SendingEntity) (*data.Message, error) {
+	const op = "sendPhoto"
+	var resp *http.Response
+	var err error
+	params := make(map[string]string)
+	params["chat_id"] = sendingPhoto.ChatId
+	photo := sendingPhoto.Value.(*data.Photo)
+	if photo.FileId == "" {
+		body, writer, err := createForm(photo.FilePath)
+		if err != nil {
+			return nil, err
+		}
+		writer.Close()
+		resp, err = util.PostRequest(*sender.token, op, params, body, writer)
+	} else {
+		params["photo"] = photo.FileId
+		resp, err = util.GetRequest(*sender.token, op, params)
+	}
+	if err != nil {
+		return nil, err
+	}
+	return getMessage(resp)
+}
+
+func createForm(filePath string) (*bytes.Buffer, *multipart.Writer, error) {
+	body := &bytes.Buffer{}
+	writer := multipart.NewWriter(body)
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, nil, err
+	}
+	defer file.Close()
+	part, _ := writer.CreateFormFile("photo", filePath)
+	_, err = io.Copy(part, file)
+	if err != nil {
+		return nil, nil, err
+	}
+	return body, writer, nil
 }
 
 func getMessage(resp *http.Response) (*data.Message, error) {

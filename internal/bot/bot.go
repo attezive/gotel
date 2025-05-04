@@ -61,6 +61,18 @@ func (tBot *GotelBot) SendMessage(message *sender.SendingEntity) (*data.Message,
 	return returnedMsg, err
 }
 
+func (tBot *GotelBot) SendPhoto(message *sender.SendingEntity, saveFileId bool) (*data.Message, error) {
+	returnedMsg, err := tBot.sender.SendPhoto(message)
+	if saveFileId {
+		if err != nil {
+			return nil, err
+		}
+		photo := message.Value.(*data.Photo)
+		photo.FileId = returnedMsg.Photo[0].FileId
+	}
+	return returnedMsg, err
+}
+
 // AddReaction is unsafe operation with panic when error in send request
 func (tBot *GotelBot) AddReaction(
 	handleFunction func(*handler.Update) interface{},
