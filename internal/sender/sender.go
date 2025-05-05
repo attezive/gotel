@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"gotel_alpha/data"
 	"gotel_alpha/internal/handler"
-	"gotel_alpha/util"
+	"gotel_alpha/util/network"
 	"io"
 	"mime/multipart"
 	"net/http"
@@ -31,7 +31,7 @@ func (sender *Sender) SendMessage(sendingMessage *SendingEntity) (*data.Message,
 	params := make(map[string]string)
 	params["chat_id"] = sendingMessage.ChatId
 	params["text"] = sendingMessage.Value.(string)
-	resp, err := util.GetRequest(*sender.token, op, params)
+	resp, err := network.GetRequest(*sender.token, op, params)
 	if err != nil {
 		return nil, err
 	}
@@ -52,10 +52,10 @@ func (sender *Sender) SendPhoto(sendingPhoto *SendingEntity) (*data.Message, err
 			return nil, err
 		}
 		writer.Close()
-		resp, err = util.PostRequest(*sender.token, op, params, body, writer)
+		resp, err = network.PostRequest(*sender.token, op, params, body, writer)
 	} else {
 		params["photo"] = photo.FileId
-		resp, err = util.GetRequest(*sender.token, op, params)
+		resp, err = network.GetRequest(*sender.token, op, params)
 	}
 	if err != nil {
 		return nil, err

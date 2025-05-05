@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"gotel_alpha/data"
-	u "gotel_alpha/util"
+	u "gotel_alpha/util/network"
 	"io"
 	"net/http"
 	"strconv"

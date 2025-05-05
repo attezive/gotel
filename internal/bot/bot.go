@@ -2,6 +2,7 @@ package bot
 
 import (
 	"gotel_alpha/data"
+	"gotel_alpha/internal/deleter"
 	"gotel_alpha/internal/handler"
 	"gotel_alpha/internal/sender"
 )
@@ -10,6 +11,7 @@ type GotelBot struct {
 	token   string
 	handler *handler.Handler
 	sender  *sender.Sender
+	deleter *deleter.Deleter
 	stop    chan bool
 }
 
@@ -25,6 +27,7 @@ func CreateBot(token ...string) *GotelBot {
 	bot.stop = make(chan bool)
 	bot.handler = handler.CreateHandler(&bot.token)
 	bot.sender = sender.NewSender(&bot.token)
+	bot.deleter = deleter.NewDeleter(&bot.token)
 	return bot
 }
 
@@ -85,4 +88,9 @@ func (tBot *GotelBot) AddReaction(
 			panic(err)
 		}
 	})
+}
+
+func (tBot *GotelBot) DeleteMessage(chatId string, messageId string) (*deleter.DeleteResponse, error) {
+	deleteResponse, err := tBot.deleter.DeleteMessage(chatId, messageId)
+	return deleteResponse, err
 }
