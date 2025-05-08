@@ -4,6 +4,7 @@ import (
 	"gotel_alpha/data"
 	"gotel_alpha/internal/deleter"
 	"gotel_alpha/internal/handler"
+	"gotel_alpha/internal/menu"
 	"gotel_alpha/internal/sender"
 )
 
@@ -12,6 +13,7 @@ type GotelBot struct {
 	handler *handler.Handler
 	sender  *sender.Sender
 	deleter *deleter.Deleter
+	menu    *menu.Menu
 	stop    chan bool
 }
 
@@ -26,8 +28,9 @@ func CreateBot(token ...string) *GotelBot {
 	}
 	bot.stop = make(chan bool)
 	bot.handler = handler.CreateHandler(&bot.token)
-	bot.sender = sender.NewSender(&bot.token)
-	bot.deleter = deleter.NewDeleter(&bot.token)
+	bot.sender = sender.CreateSender(&bot.token)
+	bot.deleter = deleter.CreateDeleter(&bot.token)
+	bot.menu = menu.CreateMenu(&bot.token)
 	return bot
 }
 
@@ -36,9 +39,7 @@ func (tBot *GotelBot) GetToken() string {
 }
 
 func (tBot *GotelBot) SetToken(token string) {
-	tBot.Stop()
 	tBot.token = token
-	tBot.Start()
 }
 
 func (tBot *GotelBot) AddHandleFunction(handleFunction func(*handler.Update)) {
@@ -93,4 +94,14 @@ func (tBot *GotelBot) AddReaction(
 func (tBot *GotelBot) DeleteMessage(chatId string, messageId string) (*deleter.DeleteResponse, error) {
 	deleteResponse, err := tBot.deleter.DeleteMessage(chatId, messageId)
 	return deleteResponse, err
+}
+
+func (tBot *GotelBot) GetCommands() (*[]menu.BotCommand, error) {
+	commands, err := tBot.menu.GetMyCommands()
+	return commands, err
+}
+
+func (tBot *GotelBot) SetCommands(newCommands *[]menu.BotCommand, saveOldCommands bool) (*menu.CommandResponse, error) {
+	commandResponse, err := tBot.menu.SetMyCommands(newCommands, saveOldCommands)
+	return commandResponse, err
 }

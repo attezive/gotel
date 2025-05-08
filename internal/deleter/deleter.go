@@ -17,7 +17,7 @@ type Deleter struct {
 	token *string
 }
 
-func NewDeleter(token *string) *Deleter {
+func CreateDeleter(token *string) *Deleter {
 	return &Deleter{token: token}
 }
 

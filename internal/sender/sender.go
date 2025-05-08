@@ -22,7 +22,7 @@ type SendingEntity struct {
 	Value  interface{}
 }
 
-func NewSender(token *string) *Sender {
+func CreateSender(token *string) *Sender {
 	return &Sender{token: token}
 }
 
