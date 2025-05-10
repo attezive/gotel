@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"gotel_alpha/data"
-	"gotel_alpha/internal/handler"
 	"gotel_alpha/util/network"
 	"io"
 	"mime/multipart"
@@ -17,16 +16,11 @@ type Sender struct {
 	token *string
 }
 
-type SendingEntity struct {
-	ChatId string
-	Value  interface{}
-}
-
 func CreateSender(token *string) *Sender {
 	return &Sender{token: token}
 }
 
-func (sender *Sender) SendMessage(sendingMessage *SendingEntity) (*data.Message, error) {
+func (sender *Sender) SendMessage(sendingMessage *data.SendingEntity) (*data.Message, error) {
 	const op = "sendMessage"
 	params := make(map[string]string)
 	params["chat_id"] = sendingMessage.ChatId
@@ -39,7 +33,7 @@ func (sender *Sender) SendMessage(sendingMessage *SendingEntity) (*data.Message,
 	return respMessage, err
 }
 
-func (sender *Sender) SendPhoto(sendingPhoto *SendingEntity) (*data.Message, error) {
+func (sender *Sender) SendPhoto(sendingPhoto *data.SendingEntity) (*data.Message, error) {
 	const op = "sendPhoto"
 	var resp *http.Response
 	var err error
@@ -89,12 +83,12 @@ func getMessage(resp *http.Response) (*data.Message, error) {
 }
 
 func (sender *Sender) ReactionSend(
-	update *handler.Update,
+	update *data.Update,
 	value interface{},
-	sendFunction func(*SendingEntity) (*data.Message, error),
+	sendFunction func(*data.SendingEntity) (*data.Message, error),
 	handleMessageFunction func(*data.Message)) error {
 
-	entity := SendingEntity{
+	entity := data.SendingEntity{
 		ChatId: strconv.FormatInt(update.Message.Chat.Id, 10),
 		Value:  value,
 	}

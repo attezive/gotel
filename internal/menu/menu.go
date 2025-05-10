@@ -2,25 +2,15 @@ package menu
 
 import (
 	"encoding/json"
+	"gotel_alpha/data"
 	"gotel_alpha/util/network"
 	"io"
 	"net/http"
 )
 
-type CommandResponse struct {
-	Success     bool   `json:"ok"`
-	ErrorCode   int    `json:"error_code,omitempty"`
-	Description string `json:"description,omitempty"`
-}
-
 type BotCommandInfo struct {
-	Success    bool         `json:"ok"`
-	BotCommand []BotCommand `json:"result"`
-}
-
-type BotCommand struct {
-	Command     string `json:"command"`
-	Description string `json:"description"`
+	Success    bool              `json:"ok"`
+	BotCommand []data.BotCommand `json:"result"`
 }
 
 type Menu struct {
@@ -31,7 +21,7 @@ func CreateMenu(token *string) *Menu {
 	return &Menu{token: token}
 }
 
-func (menu *Menu) GetMyCommands() (*[]BotCommand, error) {
+func (menu *Menu) GetMyCommands() (*[]data.BotCommand, error) {
 	const op = "getMyCommands"
 	resp, err := network.GetRequest(*menu.token, op, nil)
 	if err != nil {
@@ -40,9 +30,9 @@ func (menu *Menu) GetMyCommands() (*[]BotCommand, error) {
 	return getCommands(resp)
 }
 
-func (menu *Menu) SetMyCommands(newCommands *[]BotCommand, saveOldCommands bool) (*CommandResponse, error) {
+func (menu *Menu) SetMyCommands(newCommands *[]data.BotCommand, saveOldCommands bool) (*data.SuccessResponse, error) {
 	const op = "setMyCommands"
-	commandsResult := make([]BotCommand, len(*newCommands))
+	commandsResult := make([]data.BotCommand, len(*newCommands))
 	params := make(map[string]string, 1)
 	if saveOldCommands {
 		oldCommands, err := menu.GetMyCommands()
@@ -62,7 +52,7 @@ func (menu *Menu) SetMyCommands(newCommands *[]BotCommand, saveOldCommands bool)
 	return getCommandResponse(resp)
 }
 
-func getCommands(resp *http.Response) (*[]BotCommand, error) {
+func getCommands(resp *http.Response) (*[]data.BotCommand, error) {
 	var commandInfo *BotCommandInfo
 	body, _ := io.ReadAll(resp.Body)
 	if err := json.Unmarshal(body, &commandInfo); err != nil {
@@ -71,8 +61,8 @@ func getCommands(resp *http.Response) (*[]BotCommand, error) {
 	return &commandInfo.BotCommand, nil
 }
 
-func getCommandResponse(resp *http.Response) (*CommandResponse, error) {
-	var commandResponse CommandResponse
+func getCommandResponse(resp *http.Response) (*data.SuccessResponse, error) {
+	var commandResponse data.SuccessResponse
 	body, _ := io.ReadAll(resp.Body)
 	if err := json.Unmarshal(body, &commandResponse); err != nil {
 		return nil, err

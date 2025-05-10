@@ -42,7 +42,7 @@ func (tBot *GotelBot) SetToken(token string) {
 	tBot.token = token
 }
 
-func (tBot *GotelBot) AddHandleFunction(handleFunction func(*handler.Update)) {
+func (tBot *GotelBot) AddHandleFunction(handleFunction func(*data.Update)) {
 	tBot.handler.AddHandleFunction(handleFunction)
 }
 
@@ -60,12 +60,12 @@ func (tBot *GotelBot) StopHandling() {
 	tBot.stop <- true
 }
 
-func (tBot *GotelBot) SendMessage(message *sender.SendingEntity) (*data.Message, error) {
+func (tBot *GotelBot) SendMessage(message *data.SendingEntity) (*data.Message, error) {
 	returnedMsg, err := tBot.sender.SendMessage(message)
 	return returnedMsg, err
 }
 
-func (tBot *GotelBot) SendPhoto(message *sender.SendingEntity, saveFileId bool) (*data.Message, error) {
+func (tBot *GotelBot) SendPhoto(message *data.SendingEntity, saveFileId bool) (*data.Message, error) {
 	returnedMsg, err := tBot.sender.SendPhoto(message)
 	if saveFileId {
 		if err != nil {
@@ -79,10 +79,10 @@ func (tBot *GotelBot) SendPhoto(message *sender.SendingEntity, saveFileId bool) 
 
 // AddReaction is unsafe operation with panic when error in send request
 func (tBot *GotelBot) AddReaction(
-	handleFunction func(*handler.Update) interface{},
-	sendFunction func(*sender.SendingEntity) (*data.Message, error),
+	handleFunction func(*data.Update) interface{},
+	sendFunction func(*data.SendingEntity) (*data.Message, error),
 	handleMessageFunction func(*data.Message)) {
-	tBot.AddHandleFunction(func(update *handler.Update) {
+	tBot.AddHandleFunction(func(update *data.Update) {
 		value := handleFunction(update)
 		err := tBot.sender.ReactionSend(update, value, sendFunction, handleMessageFunction)
 		if err != nil {
@@ -91,17 +91,17 @@ func (tBot *GotelBot) AddReaction(
 	})
 }
 
-func (tBot *GotelBot) DeleteMessage(chatId string, messageId string) (*deleter.DeleteResponse, error) {
+func (tBot *GotelBot) DeleteMessage(chatId string, messageId string) (*data.SuccessResponse, error) {
 	deleteResponse, err := tBot.deleter.DeleteMessage(chatId, messageId)
 	return deleteResponse, err
 }
 
-func (tBot *GotelBot) GetCommands() (*[]menu.BotCommand, error) {
+func (tBot *GotelBot) GetCommands() (*[]data.BotCommand, error) {
 	commands, err := tBot.menu.GetMyCommands()
 	return commands, err
 }
 
-func (tBot *GotelBot) SetCommands(newCommands *[]menu.BotCommand, saveOldCommands bool) (*menu.CommandResponse, error) {
+func (tBot *GotelBot) SetCommands(newCommands *[]data.BotCommand, saveOldCommands bool) (*data.SuccessResponse, error) {
 	commandResponse, err := tBot.menu.SetMyCommands(newCommands, saveOldCommands)
 	return commandResponse, err
 }

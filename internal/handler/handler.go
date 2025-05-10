@@ -12,29 +12,21 @@ import (
 
 type Handler struct {
 	lastUpdateId    int
-	handleFunctions []func(*Update)
+	handleFunctions []func(*data.Update)
 	token           *string
 	Start           bool
 }
 
 type UpdatesInfo struct {
-	Ok      bool     `json:"ok"`
-	Updates []Update `json:"result,omitempty"`
-}
-
-type Update struct {
-	UpdateId          int          `json:"update_id"`
-	Message           data.Message `json:"message,omitempty"`
-	EditedMessage     data.Message `json:"edited_message,omitempty"`
-	ChannelPost       data.Message `json:"channel_post,omitempty"`
-	EditedChannelPost data.Message `json:"edited_channel_post,omitempty"`
+	Ok      bool          `json:"ok"`
+	Updates []data.Update `json:"result,omitempty"`
 }
 
 func CreateHandler(token *string) *Handler {
 	return &Handler{token: token}
 }
 
-func (handler *Handler) AddHandleFunction(handleFunction func(*Update)) {
+func (handler *Handler) AddHandleFunction(handleFunction func(*data.Update)) {
 	handler.handleFunctions = append(handler.handleFunctions, handleFunction)
 }
 

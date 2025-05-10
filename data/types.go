@@ -49,3 +49,27 @@ type Photo struct {
 	FilePath string `json:"-"`
 	FileId   string `json:"file_id"`
 }
+
+type SuccessResponse struct {
+	Success     bool   `json:"ok"`
+	ErrorCode   int    `json:"error_code,omitempty"`
+	Description string `json:"description,omitempty"`
+}
+
+type SendingEntity struct {
+	ChatId string
+	Value  interface{}
+}
+
+type BotCommand struct {
+	Command     string `json:"command"`
+	Description string `json:"description"`
+}
+
+type Update struct {
+	UpdateId          int     `json:"update_id"`
+	Message           Message `json:"message,omitempty"`
+	EditedMessage     Message `json:"edited_message,omitempty"`
+	ChannelPost       Message `json:"channel_post,omitempty"`
+	EditedChannelPost Message `json:"edited_channel_post,omitempty"`
+}
