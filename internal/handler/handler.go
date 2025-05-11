@@ -30,26 +30,30 @@ func (handler *Handler) AddHandleFunction(handleFunction func(*data.Update)) {
 	handler.handleFunctions = append(handler.handleFunctions, handleFunction)
 }
 
-func (handler *Handler) Handle(stop <-chan bool) error {
+func (handler *Handler) Handle(stop <-chan bool, errCh chan<- error) {
 	lastId, err := handler.getLastId()
 	if err != nil {
-		return err
+		errCh <- err
+		return
 	}
 	for {
 		select {
 		case <-stop:
 			fmt.Println("Stopping")
-			return nil
+			errCh <- nil
+			return
 		default:
 			fmt.Println("Getting last update")
 		}
-		updates, err := handler.getUpdates(*lastId)
-		if err != nil {
-			return err
+		updates, errUpdate := handler.getUpdates(*lastId)
+		if errUpdate != nil {
+			errCh <- errUpdate
+			return
 		}
-		err = handler.handleUpdates(updates, lastId)
-		if err != nil {
-			return err
+		errUpdate = handler.handleUpdates(updates, lastId)
+		if errUpdate != nil {
+			errCh <- errUpdate
+			return
 		}
 	}
 }
@@ -61,19 +65,20 @@ func (handler *Handler) getUpdates(id int) (*UpdatesInfo, error) {
 		op,
 		map[string]string{"offset": strconv.Itoa(id), "timeout": "20"})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 	return getUpdate(resp)
 }
 
 func (handler *Handler) handleUpdates(updates *UpdatesInfo, lastId *int) error {
+	const op = "handleUpdates"
 	var err error
 	if len(updates.Updates) != 0 {
 		if *lastId == 0 {
 			lastId, err = handler.getLastId()
 		}
 		if err != nil {
-			return err
+			return fmt.Errorf("%s: %w", op, err)
 		}
 		if handler.Start {
 			handler.Start = false
@@ -94,12 +99,12 @@ func (handler *Handler) loadLastId() (int, error) {
 		"getUpdates",
 		map[string]string{"offset": "-1"})
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 	defer resp.Body.Close()
 	updates, err := getUpdate(resp)
 	if err != nil {
-		return 0, err
+		return 0, fmt.Errorf("%s: %w", op, err)
 	}
 	if len(updates.Updates) == 0 {
 		return 0, nil
@@ -116,10 +121,11 @@ func (handler *Handler) getLastId() (*int, error) {
 }
 
 func getUpdate(resp *http.Response) (*UpdatesInfo, error) {
+	const op = "getUpdate"
 	var updates UpdatesInfo
 	body, _ := io.ReadAll(resp.Body)
 	if err := json.Unmarshal(body, &updates); err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 	return &updates, nil
 }

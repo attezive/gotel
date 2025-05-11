@@ -46,17 +46,15 @@ func (tBot *GotelBot) AddHandleFunction(handleFunction func(*data.Update)) {
 	tBot.handler.AddHandleFunction(handleFunction)
 }
 
-func (tBot *GotelBot) Start() error {
+func (tBot *GotelBot) Start() <-chan error {
 	tBot.handler.Start = true
-	return tBot.handler.Handle(tBot.stop)
+	tBot.stop = make(chan bool)
+	errCh := make(chan error, 1)
+	go tBot.handler.Handle(tBot.stop, errCh)
+	return errCh
 }
 
-func (tBot *GotelBot) Stop() error {
-	tBot.StopHandling()
-	return nil
-}
-
-func (tBot *GotelBot) StopHandling() {
+func (tBot *GotelBot) Stop() {
 	tBot.stop <- true
 }
 
