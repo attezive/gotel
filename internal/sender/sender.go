@@ -3,13 +3,13 @@ package sender
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"gotel_alpha/data"
 	"gotel_alpha/util/network"
 	"io"
 	"mime/multipart"
 	"net/http"
 	"os"
-	"strconv"
 )
 
 type Sender struct {
@@ -20,20 +20,23 @@ func CreateSender(token *string) *Sender {
 	return &Sender{token: token}
 }
 
-func (sender *Sender) SendMessage(sendingMessage *data.SendingEntity) (*data.Message, error) {
+func (sender *Sender) SendMessage(sendingMessage *data.SendingEntity, returnedMsg chan<- *data.Message, errCh chan<- error) {
 	const op = "sendMessage"
 	params := make(map[string]string)
 	params["chat_id"] = sendingMessage.ChatId
 	params["text"] = sendingMessage.Value.(string)
 	resp, err := network.GetRequest(*sender.token, op, params)
 	if err != nil {
-		return nil, err
+		returnedMsg <- nil
+		errCh <- fmt.Errorf("%s: %w", op, err)
+		return
 	}
 	respMessage, err := getMessage(resp)
-	return respMessage, err
+	returnedMsg <- respMessage
+	errCh <- err
 }
 
-func (sender *Sender) SendPhoto(sendingPhoto *data.SendingEntity) (*data.Message, error) {
+func (sender *Sender) SendPhoto(sendingPhoto *data.SendingEntity, returnedMsg chan<- *data.Message, errCh chan<- error) {
 	const op = "sendPhoto"
 	var resp *http.Response
 	var err error
@@ -43,7 +46,8 @@ func (sender *Sender) SendPhoto(sendingPhoto *data.SendingEntity) (*data.Message
 	if photo.FileId == "" {
 		body, writer, err := createForm(photo.FilePath)
 		if err != nil {
-			return nil, err
+			errCh <- fmt.Errorf("%s: %w", op, err)
+			return
 		}
 		writer.Close()
 		resp, err = network.PostRequest(*sender.token, op, params, body, writer)
@@ -52,9 +56,12 @@ func (sender *Sender) SendPhoto(sendingPhoto *data.SendingEntity) (*data.Message
 		resp, err = network.GetRequest(*sender.token, op, params)
 	}
 	if err != nil {
-		return nil, err
+		errCh <- fmt.Errorf("%s: %w", op, err)
+		return
 	}
-	return getMessage(resp)
+	msg, err := getMessage(resp)
+	returnedMsg <- msg
+	errCh <- fmt.Errorf("%s: %w", op, err)
 }
 
 func createForm(filePath string) (*bytes.Buffer, *multipart.Writer, error) {
@@ -80,24 +87,4 @@ func getMessage(resp *http.Response) (*data.Message, error) {
 		return nil, err
 	}
 	return &messageInfo.Message, nil
-}
-
-func (sender *Sender) ReactionSend(
-	update *data.Update,
-	value interface{},
-	sendFunction func(*data.SendingEntity) (*data.Message, error),
-	handleMessageFunction func(*data.Message)) error {
-
-	entity := data.SendingEntity{
-		ChatId: strconv.FormatInt(update.Message.Chat.Id, 10),
-		Value:  value,
-	}
-	msg, err := sendFunction(&entity)
-	if err != nil {
-		return err
-	}
-	if handleMessageFunction != nil {
-		handleMessageFunction(msg)
-	}
-	return nil
 }

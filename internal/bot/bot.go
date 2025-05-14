@@ -6,12 +6,13 @@ import (
 	"gotel_alpha/internal/handler"
 	"gotel_alpha/internal/menu"
 	"gotel_alpha/internal/sender"
+	"strconv"
 )
 
 type GotelBot struct {
 	token   string
 	handler *handler.Handler
-	sender  *sender.Sender
+	Sender  *sender.Sender
 	deleter *deleter.Deleter
 	menu    *menu.Menu
 	stop    chan bool
@@ -28,7 +29,7 @@ func CreateBot(token ...string) *GotelBot {
 	}
 	bot.stop = make(chan bool)
 	bot.handler = handler.CreateHandler(&bot.token)
-	bot.sender = sender.CreateSender(&bot.token)
+	bot.Sender = sender.CreateSender(&bot.token)
 	bot.deleter = deleter.CreateDeleter(&bot.token)
 	bot.menu = menu.CreateMenu(&bot.token)
 	return bot
@@ -49,44 +50,53 @@ func (tBot *GotelBot) AddHandleFunction(handleFunction func(*data.Update)) {
 func (tBot *GotelBot) Start() <-chan error {
 	tBot.handler.Start = true
 	tBot.stop = make(chan bool)
-	errCh := make(chan error, 1)
-	go tBot.handler.Handle(tBot.stop, errCh)
-	return errCh
+	errChan := make(chan error, 1)
+	go tBot.handler.Handle(tBot.stop, errChan)
+	return errChan
 }
 
 func (tBot *GotelBot) Stop() {
 	tBot.stop <- true
 }
 
-func (tBot *GotelBot) SendMessage(message *data.SendingEntity) (*data.Message, error) {
-	returnedMsg, err := tBot.sender.SendMessage(message)
-	return returnedMsg, err
+func (tBot *GotelBot) SendMessage(message *data.SendingEntity) (<-chan *data.Message, <-chan error) {
+	returnedMsg := make(chan *data.Message, 1)
+	errChan := make(chan error, 1)
+	go tBot.Sender.SendMessage(message, returnedMsg, errChan)
+	return returnedMsg, errChan
 }
 
-func (tBot *GotelBot) SendPhoto(message *data.SendingEntity, saveFileId bool) (*data.Message, error) {
-	returnedMsg, err := tBot.sender.SendPhoto(message)
+func (tBot *GotelBot) SendPhoto(message *data.SendingEntity, saveFileId bool) (<-chan *data.Message, <-chan error) {
+	returnedMsg := make(chan *data.Message, 1)
+	errChan := make(chan error, 1)
+	go tBot.Sender.SendPhoto(message, returnedMsg, errChan)
 	if saveFileId {
-		if err != nil {
-			return nil, err
+		if err := <-errChan; err != nil {
+			errChan <- err
+			return returnedMsg, errChan
 		}
+		errChan <- nil
 		photo := message.Value.(*data.Photo)
-		photo.FileId = returnedMsg.Photo[0].FileId
+		msg := <-returnedMsg
+		photo.FileId = (msg).Photo[0].FileId
+		returnedMsg <- msg
 	}
-	return returnedMsg, err
+	return returnedMsg, errChan
 }
 
-// AddReaction is unsafe operation with panic when error in send request
 func (tBot *GotelBot) AddReaction(
 	handleFunction func(*data.Update) interface{},
-	sendFunction func(*data.SendingEntity) (*data.Message, error),
-	handleMessageFunction func(*data.Message)) {
+	sendFunction func(*data.SendingEntity, chan<- *data.Message, chan<- error)) (<-chan *data.Message, <-chan error) {
+	errCh := make(chan error, 1)
+	msgCh := make(chan *data.Message, 1)
 	tBot.AddHandleFunction(func(update *data.Update) {
 		value := handleFunction(update)
-		err := tBot.sender.ReactionSend(update, value, sendFunction, handleMessageFunction)
-		if err != nil {
-			panic(err)
-		}
+		entity := data.SendingEntity{
+			ChatId: strconv.FormatInt(update.Message.Chat.Id, 10),
+			Value:  value}
+		sendFunction(&entity, msgCh, errCh)
 	})
+	return msgCh, errCh
 }
 
 func (tBot *GotelBot) DeleteMessage(chatId string, messageId string) (*data.SuccessResponse, error) {
