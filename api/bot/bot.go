@@ -1,11 +1,11 @@
 package bot
 
 import (
+	"github.com/attezive/gotel/api/deleter"
+	"github.com/attezive/gotel/api/handler"
+	"github.com/attezive/gotel/api/menu"
+	"github.com/attezive/gotel/api/sender"
 	"github.com/attezive/gotel/data"
-	"github.com/attezive/gotel/internal/deleter"
-	"github.com/attezive/gotel/internal/handler"
-	"github.com/attezive/gotel/internal/menu"
-	"github.com/attezive/gotel/internal/sender"
 	"strconv"
 )
 
