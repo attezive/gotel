@@ -3,8 +3,8 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"gotel/data"
-	u "gotel/util/network"
+	"github.com/attezive/gotel/data"
+	u "github.com/attezive/gotel/util/network"
 	"io"
 	"net/http"
 	"strconv"

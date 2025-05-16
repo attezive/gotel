@@ -2,8 +2,8 @@ package deleter
 
 import (
 	"encoding/json"
-	"gotel/data"
-	"gotel/util/network"
+	"github.com/attezive/gotel/data"
+	"github.com/attezive/gotel/util/network"
 	"io"
 	"net/http"
 )
