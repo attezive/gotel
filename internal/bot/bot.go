@@ -1,11 +1,11 @@
 package bot
 
 import (
-	"gotel_alpha/data"
-	"gotel_alpha/internal/deleter"
-	"gotel_alpha/internal/handler"
-	"gotel_alpha/internal/menu"
-	"gotel_alpha/internal/sender"
+	"gotel/data"
+	"gotel/internal/deleter"
+	"gotel/internal/handler"
+	"gotel/internal/menu"
+	"gotel/internal/sender"
 	"strconv"
 )
 

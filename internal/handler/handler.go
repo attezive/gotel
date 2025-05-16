@@ -3,8 +3,8 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
-	"gotel_alpha/data"
-	u "gotel_alpha/util/network"
+	"gotel/data"
+	u "gotel/util/network"
 	"io"
 	"net/http"
 	"strconv"

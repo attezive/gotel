@@ -2,8 +2,8 @@ package menu
 
 import (
 	"encoding/json"
-	"gotel_alpha/data"
-	"gotel_alpha/util/network"
+	"gotel/data"
+	"gotel/util/network"
 	"io"
 	"net/http"
 )
