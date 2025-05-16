@@ -1,3 +1,3 @@
-module gotel_alpha
+module gotel
 
 go 1.24
