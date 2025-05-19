@@ -16,16 +16,20 @@ func CreateDeleter(token *string) *Deleter {
 	return &Deleter{token: token}
 }
 
-func (deleter Deleter) DeleteMessage(chatId string, messageId string) (*data.SuccessResponse, error) {
+func (deleter Deleter) DeleteMessage(chatId string, messageId string,
+	rspCh chan<- *data.SuccessResponse, errCh chan<- error) {
 	const op = "deleteMessage"
 	params := make(map[string]string, 2)
 	params["chat_id"] = chatId
 	params["message_id"] = messageId
 	resp, err := network.GetRequest(*deleter.token, op, params)
 	if err != nil {
-		return nil, err
+		errCh <- err
+		return
 	}
-	return getDeleteResponse(resp)
+	success, err := getDeleteResponse(resp)
+	rspCh <- success
+	errCh <- err
 }
 
 func getDeleteResponse(resp *http.Response) (*data.SuccessResponse, error) {

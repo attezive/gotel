@@ -39,11 +39,9 @@ func (handler *Handler) Handle(stop <-chan bool, errCh chan<- error) {
 	for {
 		select {
 		case <-stop:
-			fmt.Println("Stopping")
 			errCh <- nil
 			return
 		default:
-			fmt.Println("Getting last update")
 		}
 		updates, errUpdate := handler.getUpdates(*lastId)
 		if errUpdate != nil {

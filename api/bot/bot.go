@@ -99,17 +99,25 @@ func (tBot *GotelBot) AddReaction(
 	return msgCh, errCh
 }
 
-func (tBot *GotelBot) DeleteMessage(chatId string, messageId string) (*data.SuccessResponse, error) {
-	deleteResponse, err := tBot.deleter.DeleteMessage(chatId, messageId)
-	return deleteResponse, err
+func (tBot *GotelBot) DeleteMessage(chatId string, messageId string) (<-chan *data.SuccessResponse, <-chan error) {
+	errCh := make(chan error, 1)
+	rspCh := make(chan *data.SuccessResponse, 1)
+	go tBot.deleter.DeleteMessage(chatId, messageId, rspCh, errCh)
+	return rspCh, errCh
 }
 
-func (tBot *GotelBot) GetCommands() (*[]data.BotCommand, error) {
-	commands, err := tBot.menu.GetMyCommands()
-	return commands, err
+func (tBot *GotelBot) GetCommands() (<-chan *[]data.BotCommand, <-chan error) {
+	errCh := make(chan error, 1)
+	cmdCh := make(chan *[]data.BotCommand, 1)
+	go tBot.menu.GetMyCommands(cmdCh, errCh)
+	return cmdCh, errCh
 }
 
-func (tBot *GotelBot) SetCommands(newCommands *[]data.BotCommand, saveOldCommands bool) (*data.SuccessResponse, error) {
-	commandResponse, err := tBot.menu.SetMyCommands(newCommands, saveOldCommands)
-	return commandResponse, err
+func (tBot *GotelBot) SetCommands(newCommands *[]data.BotCommand,
+	saveOldCommands bool) (<-chan *data.SuccessResponse, <-chan error) {
+
+	errCh := make(chan error, 1)
+	rspCh := make(chan *data.SuccessResponse, 1)
+	go tBot.menu.SetMyCommands(newCommands, saveOldCommands, rspCh, errCh)
+	return rspCh, errCh
 }
