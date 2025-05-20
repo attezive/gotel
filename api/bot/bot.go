@@ -47,6 +47,14 @@ func (tBot *GotelBot) AddHandleFunction(handleFunction func(*data.Update)) {
 	tBot.handler.AddHandleFunction(handleFunction)
 }
 
+func (tBot *GotelBot) AddHandleCommand(command string, handleMessageFunc func(*data.Message)) {
+	tBot.handler.AddHandleFunction(func(update *data.Update) {
+		if update.Message.Text == "/"+command {
+			handleMessageFunc(&update.Message)
+		}
+	})
+}
+
 func (tBot *GotelBot) Start() <-chan error {
 	tBot.handler.Start = true
 	tBot.stop = make(chan bool)
